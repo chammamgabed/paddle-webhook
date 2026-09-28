@@ -1,80 +1,12 @@
 const express = require("express");
-const crypto = require("crypto");
 
 const app = express();
 
 const PORT = process.env.PORT || 10000;
-const WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET;
 const CLIENT_TOKEN = process.env.PADDLE_CLIENT_TOKEN;
 
-const PRICE_ID = "pri_01m3hq83szwpw1aqj47ms9jma9";
-
 // ===============================
-// Paddle Webhook
-// ===============================
-app.post(
-  "/webhooks",
-  express.raw({ type: "application/json" }),
-  (req, res) => {
-    try {
-      const signature = req.headers["paddle-signature"];
-
-      if (!signature) {
-        return res.status(400).send("Missing Paddle-Signature");
-      }
-
-      if (!WEBHOOK_SECRET) {
-        console.error("PADDLE_WEBHOOK_SECRET is not configured");
-        return res.status(500).send("Webhook secret not configured");
-      }
-
-      const parts = signature.split(";");
-
-      const timestampPart = parts.find((p) => p.startsWith("ts="));
-      const signaturePart = parts.find((p) => p.startsWith("h1="));
-
-      if (!timestampPart || !signaturePart) {
-        return res.status(400).send("Invalid Paddle-Signature");
-      }
-
-      const timestamp = timestampPart.substring(3);
-      const receivedSignature = signaturePart.substring(3);
-
-      const signedPayload =
-        timestamp + ":" + req.body.toString("utf8");
-
-      const expectedSignature = crypto
-        .createHmac("sha256", WEBHOOK_SECRET)
-        .update(signedPayload)
-        .digest("hex");
-
-      const receivedBuffer = Buffer.from(receivedSignature, "utf8");
-      const expectedBuffer = Buffer.from(expectedSignature, "utf8");
-
-      if (
-        receivedBuffer.length !== expectedBuffer.length ||
-        !crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
-      ) {
-        console.log("Invalid Paddle webhook signature");
-        return res.status(400).send("Invalid signature");
-      }
-
-      const event = JSON.parse(req.body.toString("utf8"));
-
-      console.log("Paddle webhook received:");
-      console.log("Event type:", event.event_type);
-      console.log("Event ID:", event.event_id);
-
-      return res.status(200).send("OK");
-    } catch (error) {
-      console.error("Webhook error:", error);
-      return res.status(400).send("Invalid webhook");
-    }
-  }
-);
-
-// ===============================
-// صفحة الشراء
+// الصفحة الرئيسية
 // ===============================
 app.get("/", (req, res) => {
   if (!CLIENT_TOKEN) {
@@ -160,14 +92,7 @@ app.get("/", (req, res) => {
     });
 
     function openCheckout() {
-      Paddle.Checkout.open({
-        items: [
-          {
-            priceId: "${PRICE_ID}",
-            quantity: 1
-          }
-        ]
-      });
+      alert("Checkout is not configured yet.");
     }
   </script>
 
@@ -176,6 +101,9 @@ app.get("/", (req, res) => {
   `);
 });
 
+// ===============================
+// تشغيل الخادم
+// ===============================
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on port " + PORT);
 });
