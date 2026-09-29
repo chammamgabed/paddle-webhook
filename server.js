@@ -5,7 +5,8 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-const PADDLE_API_URL = "https://sandbox-api.paddle.com";
+// LIVE Paddle API
+const PADDLE_API_URL = "https://api.paddle.com";
 
 // =========================
 // Health check
@@ -145,7 +146,10 @@ app.get("/course", async (req, res) => {
 
     if (!apiKey) {
       console.error("PADDLE_API_KEY is not configured");
-      return res.status(500).send("Server configuration error.");
+
+      return res.status(500).send(
+        "Server configuration error."
+      );
     }
 
     const response = await fetch(
@@ -163,7 +167,10 @@ app.get("/course", async (req, res) => {
 
     if (!response.ok) {
       console.error("Paddle API error:", result);
-      return res.status(403).send("Payment verification failed.");
+
+      return res.status(403).send(
+        "Payment verification failed."
+      );
     }
 
     const transaction = result.data;
@@ -175,22 +182,33 @@ app.get("/course", async (req, res) => {
       customData.course === "digital-success-course";
 
     if (!validPurchase) {
-      console.log("Protected course access denied.");
-      return res.status(403).send("Access denied.");
+      console.log(
+        "Protected course access denied."
+      );
+
+      return res.status(403).send(
+        "Access denied."
+      );
     }
 
     const coursePath =
       "/etc/secrets/course-content.html";
 
     if (!fs.existsSync(coursePath)) {
-      console.error("Course content file is missing.");
-      return res.status(500).send("Course content is not configured.");
+      console.error(
+        "Course content file is missing."
+      );
+
+      return res.status(500).send(
+        "Course content is not configured."
+      );
     }
 
-    const courseHtml = fs.readFileSync(
-      coursePath,
-      "utf8"
-    );
+    const courseHtml =
+      fs.readFileSync(
+        coursePath,
+        "utf8"
+      );
 
     console.log(
       "Protected course access approved for:",
@@ -215,7 +233,10 @@ app.get("/course", async (req, res) => {
     return res.send(courseHtml);
 
   } catch (error) {
-    console.error("Protected course error:", error);
+    console.error(
+      "Protected course error:",
+      error
+    );
 
     return res.status(500).send(
       "Unable to open the course."
@@ -229,7 +250,9 @@ app.get("/course", async (req, res) => {
 
 app.post(
   "/webhook",
-  express.raw({ type: "application/json" }),
+  express.raw({
+    type: "application/json"
+  }),
   (req, res) => {
     try {
       const signatureHeader =
@@ -241,7 +264,9 @@ app.post(
       if (!signatureHeader) {
         return res
           .status(400)
-          .send("Missing Paddle-Signature");
+          .send(
+            "Missing Paddle-Signature"
+          );
       }
 
       if (!secret) {
@@ -251,7 +276,9 @@ app.post(
 
         return res
           .status(500)
-          .send("Webhook secret not configured");
+          .send(
+            "Webhook secret not configured"
+          );
       }
 
       const parts =
@@ -273,7 +300,9 @@ app.post(
       ) {
         return res
           .status(400)
-          .send("Invalid Paddle-Signature");
+          .send(
+            "Invalid Paddle-Signature"
+          );
       }
 
       const timestamp =
@@ -286,17 +315,24 @@ app.post(
         Number(timestamp);
 
       const currentTime =
-        Math.floor(Date.now() / 1000);
+        Math.floor(
+          Date.now() / 1000
+        );
 
       if (
-        !Number.isFinite(timestampNumber) ||
+        !Number.isFinite(
+          timestampNumber
+        ) ||
         Math.abs(
-          currentTime - timestampNumber
+          currentTime -
+          timestampNumber
         ) > 5
       ) {
         return res
           .status(408)
-          .send("Webhook timestamp expired");
+          .send(
+            "Webhook timestamp expired"
+          );
       }
 
       const rawBody =
@@ -311,7 +347,9 @@ app.post(
             "sha256",
             secret
           )
-          .update(signedPayload)
+          .update(
+            signedPayload
+          )
           .digest("hex");
 
       const expectedBuffer =
@@ -340,20 +378,27 @@ app.post(
 
         return res
           .status(401)
-          .send("Invalid signature");
+          .send(
+            "Invalid signature"
+          );
       }
 
       const event =
         JSON.parse(rawBody);
 
-      console.log("=================================");
+      console.log(
+        "================================="
+      );
+
       console.log(
         "Verified Paddle webhook"
       );
+
       console.log(
         "Event type:",
         event.event_type
       );
+
       console.log(
         "Event ID:",
         event.event_id
@@ -398,7 +443,9 @@ app.post(
         }
       }
 
-      console.log("=================================");
+      console.log(
+        "================================="
+      );
 
       return res
         .status(200)
@@ -423,8 +470,11 @@ app.post(
 // Start server
 // =========================
 
-app.listen(PORT, () => {
-  console.log(
-    `Server running on port ${PORT}`
-  );
-});
+app.listen(
+  PORT,
+  () => {
+    console.log(
+      `Server running on port ${PORT}`
+    );
+  }
+);
