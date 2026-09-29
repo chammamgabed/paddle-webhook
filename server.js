@@ -1,4 +1,4 @@
-فيconst express = require("express");
+const express = require("express");
 const crypto = require("crypto");
 
 const app = express();
@@ -106,9 +106,13 @@ app.post(
           customData &&
           customData.course === "digital-success-course"
         ) {
-          console.log("Digital Success Course purchase confirmed.");
+          console.log(
+            "Digital Success Course purchase confirmed."
+          );
         } else {
-          console.log("No Digital Success Course custom data found.");
+          console.log(
+            "No Digital Success Course custom data found."
+          );
         }
       }
 
