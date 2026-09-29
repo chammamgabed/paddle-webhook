@@ -30,8 +30,13 @@ app.post(
       // Extract timestamp and signature
       const parts = signatureHeader.split(";");
 
-      const timestampPart = parts.find((part) => part.startsWith("ts="));
-      const signaturePart = parts.find((part) => part.startsWith("h1="));
+      const timestampPart = parts.find((part) =>
+        part.startsWith("ts=")
+      );
+
+      const signaturePart = parts.find((part) =>
+        part.startsWith("h1=")
+      );
 
       if (!timestampPart || !signaturePart) {
         return res.status(400).send("Invalid Paddle-Signature");
@@ -68,7 +73,10 @@ app.post(
 
       if (
         expectedBuffer.length !== receivedBuffer.length ||
-        !crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
+        !crypto.timingSafeEqual(
+          expectedBuffer,
+          receivedBuffer
+        )
       ) {
         console.error("Invalid Paddle webhook signature");
         return res.status(401).send("Invalid signature");
@@ -77,15 +85,37 @@ app.post(
       // Signature is valid
       const event = JSON.parse(rawBody);
 
-      console.log("Verified Paddle webhook:");
+      console.log("=================================");
+      console.log("Verified Paddle webhook");
       console.log("Event type:", event.event_type);
       console.log("Event ID:", event.event_id);
 
+      // Payment completed
       if (event.event_type === "transaction.completed") {
+        const transaction = event.data;
+
         console.log("Payment completed successfully.");
+        console.log("Transaction ID:", transaction.id);
+
+        // Read custom data from checkout
+        const customData = transaction.custom_data;
+
+        console.log("Custom data:", customData);
+
+        if (
+          customData &&
+          customData.course === "digital-success-course"
+        ) {
+          console.log("Digital Success Course purchase confirmed.");
+        } else {
+          console.log("No Digital Success Course custom data found.");
+        }
       }
 
+      console.log("=================================");
+
       return res.status(200).send("OK");
+
     } catch (error) {
       console.error("Webhook processing error:", error);
       return res.status(500).send("Webhook processing failed");
